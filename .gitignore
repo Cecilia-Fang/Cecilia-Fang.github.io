@@ -25,3 +25,6 @@ iScreen Shoter*.jpg
 index.backup.html
 index.safe.html
 index.v*.html
+
+# staged locally, not published until approved
+portfolio/assets/book/
