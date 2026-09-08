@@ -6,7 +6,7 @@
 <title>Cecilia Fang — Designing Better Guest Journeys</title>
 <meta name="description" content="Full-funnel digital marketing for independent hotels — SEO, SEM, CRM, social, content and data across the whole guest journey.">
 <link rel="canonical" href="https://cecilia-fang.github.io/portfolio/">
-<meta http-equiv="refresh" content="0; url=portfolio/">
+<meta http-equiv="refresh" content="0; url=portfolio/index.html">
 
 <link rel="icon" type="image/svg+xml" href="portfolio/assets/favicon.svg">
 <link rel="apple-touch-icon" href="portfolio/assets/apple-touch-icon.png">
@@ -34,7 +34,11 @@
 </style>
 </head>
 <body>
-  <p>Taking you to the portfolio… <a href="portfolio/">continue</a></p>
-  <script>location.replace('portfolio/');</script>
+  <p>Taking you to the portfolio… <a href="portfolio/index.html">continue</a></p>
+  <script>
+    /* a web server resolves portfolio/ to its index.html; opening this file
+       from the disk does not, so name the file when there is no server */
+    location.replace(location.protocol === 'file:' ? 'portfolio/index.html' : 'portfolio/');
+  </script>
 </body>
 </html>
