@@ -1238,8 +1238,10 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
    positioned against each other, so anything that adds height here would pull
    the line away from the box it is supposed to meet. White ground, no alpha
    channel — multiply keys it onto the panel. */
-.signup{position:absolute;left:0;bottom:0;width:clamp(110px,10.5vw,140px);
-    height:auto;mix-blend-mode:multiply;pointer-events:none}
+.signup{position:absolute;left:0;bottom:clamp(-87px,-6.05vw,-62px);
+    width:clamp(170px,17vw,240px);height:auto;
+    transform:scaleX(-1);            /* facing the column it belongs to */
+    mix-blend-mode:multiply;pointer-events:none}
 /* the insight line that sits under a section heading — same face and weight
    as the Book statement, a wider measure because it runs as one sentence */
 .stateline{max-width:36ch;margin-top:clamp(18px,2vw,28px);
