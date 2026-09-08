@@ -1,0 +1,27 @@
+# ── the site is index.html + assets/ + recordings/ ──────────────────────────
+# everything below is working material: it never loads on the page, and this
+# repo is public, so it stays on the local disk (and in the dated zip archive)
+
+# macOS / Office noise
+.DS_Store
+._*
+~$*
+
+# working documents and planning
+*.docx
+planning/
+.frontend-slides/
+portfolio-deck.html
+
+# raw sources, before cropping / keying / re-encoding
+照片.jpg
+照片抠图.png
+落日视频.mp4
+guest club.webp
+image-*.webp
+iScreen Shoter*.jpg
+
+# editing snapshots of the page itself
+index.backup.html
+index.safe.html
+index.v*.html
