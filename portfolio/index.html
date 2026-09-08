@@ -1657,8 +1657,8 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
             <div class="cell">
                 <svg class="ic"><use href="#i-euro"/></svg>
                 <div class="num" data-value="70k+"></div>
-                <div class="k">revenue per campaign, top end</div>
-                <div class="src">attributed to the campaign link</div>
+                <div class="k">revenue across all campaigns</div>
+                <div class="src">attributed to campaign links</div>
             </div>
         </div>
     </div>
@@ -2370,9 +2370,9 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
                     <span class="gapp__btn gapp__btn--power" aria-hidden="true"></span>
                     <span class="gapp__btn gapp__btn--vol" aria-hidden="true"></span>
                     <div class="gapp__screen">
-                        <video id="gappVid" src="assets/journey/guest-app.mp4"
+                        <video id="gappVid" data-src="assets/journey/guest-app.mp4"
                                poster="assets/journey/guest-app-poster.jpg"
-                               muted loop playsinline preload="none" aria-hidden="true"></video>
+                               muted loop playsinline preload="auto" aria-hidden="true"></video>
                     </div>
                 </div>
                 <figcaption>
@@ -2568,7 +2568,7 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
         <div class="metrics">
             <div class="stat-row rv-stagger">
                 <div class="stat"><svg class="ic"><use href="#i-euro"/></svg><div class="num" data-value="€45K+"></div><div class="rule-dashed"></div>
-                    <div class="k">revenue from the CRM programme</div></div>
+                    <div class="k">CRM programme revenue, full year</div></div>
                 <div class="stat"><svg class="ic"><use href="#i-tag"/></svg><div class="num" data-value="200+"></div><div class="rule-dashed"></div>
                     <div class="k">direct bookings, away from the OTAs</div></div>
                 <div class="stat"><svg class="ic"><use href="#i-heart"/></svg><div class="num" data-value="500+"></div><div class="rule-dashed"></div>
@@ -3395,11 +3395,17 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
     if (!v) return;
     if (matchMedia('(prefers-reduced-motion:reduce)').matches) return;
 
-    /* the file is preload="none" so it costs the first paint nothing; the
-       poster holds the screen. Start fetching a viewport and a half early,
-       so by the time the tablet is actually on screen it is ready to run. */
+    /* The tag ships with no src, only a data-src and the poster, so the first
+       paint pays nothing for a 2.8MB file that sits far below the fold —
+       preload="metadata" was not enough, Chrome pulls the whole file for it.
+       Attaching the source is what starts the fetch, a viewport and a half
+       early. Never load() here: it resets the element and would abort a
+       play() the observer had already started. */
     let warmed = false;
-    const warm = () => { if (warmed) return; warmed = true; v.load(); };
+    const warm = () => {
+        if (warmed) return; warmed = true;
+        if (v.dataset.src) { v.src = v.dataset.src; delete v.dataset.src; }
+    };
     if ('IntersectionObserver' in window) {
         const w = new IntersectionObserver(es => {
             if (es.some(e => e.isIntersecting)) { warm(); w.disconnect(); }
@@ -3407,12 +3413,14 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
         w.observe(v);
     } else warm();
 
-    let playing = false;
+    /* read the element's real state instead of remembering it: if a play()
+       is refused because the source was not attached yet, the next tick of
+       check() simply tries again */
     const set = on => {
-        if (on === playing) return;
-        playing = on;
-        if (on) { const p = v.play(); if (p && p.catch) p.catch(() => {}); }
-        else v.pause();
+        if (on) {
+            warm();
+            if (v.paused) { const p = v.play(); if (p && p.catch) p.catch(() => {}); }
+        } else if (!v.paused) v.pause();
     };
     const check = () => {
         const r = v.getBoundingClientRect();
