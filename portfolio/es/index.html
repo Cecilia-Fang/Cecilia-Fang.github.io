@@ -2369,7 +2369,8 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
                     <span class="gapp__btn gapp__btn--vol" aria-hidden="true"></span>
                     <div class="gapp__screen">
                         <video id="gappVid" src="../assets/journey/guest-app.mp4"
-                               muted loop playsinline preload="metadata" aria-hidden="true"></video>
+                               poster="../assets/journey/guest-app-poster.jpg"
+                               muted loop playsinline preload="none" aria-hidden="true"></video>
                     </div>
                 </div>
                 <figcaption>
@@ -3387,6 +3388,18 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
     const v = document.getElementById('gappVid');
     if (!v) return;
     if (matchMedia('(prefers-reduced-motion:reduce)').matches) return;
+
+    /* the file is preload="none" so it costs the first paint nothing; the
+       poster holds the screen. Start fetching a viewport and a half early,
+       so by the time the tablet is actually on screen it is ready to run. */
+    let warmed = false;
+    const warm = () => { if (warmed) return; warmed = true; v.load(); };
+    if ('IntersectionObserver' in window) {
+        const w = new IntersectionObserver(es => {
+            if (es.some(e => e.isIntersecting)) { warm(); w.disconnect(); }
+        }, { rootMargin: '150% 0px' });
+        w.observe(v);
+    } else warm();
 
     let playing = false;
     const set = on => {
