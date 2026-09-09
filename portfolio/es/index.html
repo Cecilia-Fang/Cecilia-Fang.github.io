@@ -1119,8 +1119,10 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
        already out of the envelope */
     .scat{height:auto;display:grid;grid-template-columns:1fr 1fr;
         gap:26px 14px;place-items:center;padding:0 0 30px}
-    .scat__core{position:static;translate:none;width:100%;grid-column:1/-1;
-        margin-bottom:16px}
+    /* the 3D envelope fills a phone screen and pushes the cards off it, and
+       on this width they are already out of it — so drop the plate entirely
+       and let the grid close the row it was holding open */
+    .scat__core{display:none}
     .scat__i{position:static;height:auto;aspect-ratio:auto;width:100%;max-width:198px;
         opacity:1!important;transform:none!important}
     .scat__f,.scat__p{height:auto}
@@ -3035,14 +3037,42 @@ body::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
         const cx  = rr.width < 820 ? rr.width / 2 : rr.width * 0.76;
         const tx  = Math.min(Math.max(cx - LAYER_W / 2, pad), rr.width - LAYER_W - pad) + LAYER_W / 2;
         const ty  = pad + LAYER_H / 2;
-        const dx  = (rr.left + tx) - (ar.left + ar.width  / 2);
-        const dy  = (rr.top  + ty) - (ar.top  + ar.height / 2);
+        let dx  = (rr.left + tx) - (ar.left + ar.width  / 2);
+        let dy  = (rr.top  + ty) - (ar.top  + ar.height / 2);
         const tz = parseFloat(cs.getPropertyValue('--tilt-z')) || 0;
         const tx2 = parseFloat(cs.getPropertyValue('--tilt-x')) || 0;
+        /* On a narrow screen the layer lands ON the ring instead of beside it,
+           and inside a preserve-3d parent z-index counts for nothing: the ring
+           cards sit at +radius, so they paint straight through the video. Lift
+           the layer past the deepest card, then take the perspective
+           magnification back out with an equal scale and an offset measured
+           from the perspective origin — same place, same pixel size, now in
+           front. Wide screens park the layer beside the ring: zp stays 0 and
+           k stays 1, so their transform is the one they always had. */
+        let zp = 0, k = 1;
+        const P = parseFloat(cs.perspective) || 0;
+        if (rr.width < 820 && P > 0) {
+            const cw = cards[0] ? cards[0].offsetWidth  : 0;
+            const ch = cards[0] ? cards[0].offsetHeight : 0;
+            /* --radius computes to an unresolved calc(), so mirror its own
+               definition off the measured card: radius = card-w * 1.374 */
+            const lift = cw * 1.374 +
+                         ch / 2 * Math.abs(Math.sin(tx2 * Math.PI / 180)) + 12;
+            if (lift > 0 && lift < P / 2) {
+                zp = lift; k = (P - zp) / P;
+                const po = cs.perspectiveOrigin.split(' ');
+                const ox = rr.left + (parseFloat(po[0]) || 0);
+                const oy = rr.top  + (parseFloat(po[1]) || 0);
+                const ax = ar.left + ar.width  / 2;
+                const ay = ar.top  + ar.height / 2;
+                dx = k * (dx + ax - ox) - (ax - ox);
+                dy = k * (dy + ay - oy) - (ay - oy);
+            }
+        }
         return `rotateY(${(-rot).toFixed(2)}deg) rotateZ(${(-tz).toFixed(2)}deg)` +
                ` rotateX(${(-tx2).toFixed(2)}deg)` +
-               ` translate3d(${dx.toFixed(1)}px, ${dy.toFixed(1)}px, 0px)` +
-               ` scale(1)`;
+               ` translate3d(${dx.toFixed(1)}px, ${dy.toFixed(1)}px, ${zp.toFixed(1)}px)` +
+               ` scale(${k.toFixed(5)})`;
     };
 
     const flyOut = (card) => {
